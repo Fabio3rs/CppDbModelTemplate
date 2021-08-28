@@ -108,9 +108,14 @@ function field_type_gen_set($type, $name, $sname, $pos, $extra)
     throw new Exception('type error ' . $type);
 }
 
-function extra_attribute_field($type)
+function extra_attribute_field($field)
 {
-    switch ($type) {
+    if ($field->nullable)
+    {
+        return '';
+    }
+
+    switch ($field->type) {
         case 'UInt64':
             return '{0}';
 
@@ -207,7 +212,7 @@ function nullablefieldtype_get($field)
            . '(' . field_type_get($field->type, $field->name) . ')';
     }
 
-    return field_type_get($field->type, $field->name);
+    return field_type_get($field->type, $field->name) . ($field->type == 'timestamp'? '.value()' : '');
 }
 
 function find_field($fields, $name)

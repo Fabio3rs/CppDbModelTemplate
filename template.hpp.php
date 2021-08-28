@@ -17,7 +17,7 @@ public:
 <?php
     foreach ($FIELDS as $k => $v)
     {
-        echo '    ', nullablefieldtype($v), ' ', $v->name, extra_attribute_field($v->type), ';', "\n";
+        echo '    ', nullablefieldtype($v), ' ', $v->name, extra_attribute_field($v), ';', "\n";
     }
     ?>
 
