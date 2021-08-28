@@ -24,6 +24,8 @@ public:
     /* Functions */
     auto empty() const -> bool { return id == 0; }
 
+<?= declare_findable($FIELDS, $FINDABLES) ?>
+
     auto findByID(uint64_t fid) -> bool;
     void save();
 

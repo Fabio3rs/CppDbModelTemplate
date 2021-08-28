@@ -1,6 +1,17 @@
 #include "../Database/CSql.hpp"
 #include "<?= $MODEL_NAME ?>.hpp"
 
+static void get_this_model_data(<?= $MODEL_NAME ?> &val,
+                                  unique_resultset_t &res)
+{
+<?php
+    foreach ($FIELDS as $k => $v)
+    {
+        echo '    val.', $v->name, ' = ', nullablefieldtype_get($v), ';', "\n";
+    }
+    ?>
+}
+
 auto <?= $MODEL_NAME ?>::findByID(uint64_t fid) -> bool {
     auto sqlconn = std::reinterpret_pointer_cast<sql::Connection>(usingconn);
 
@@ -16,20 +27,46 @@ auto <?= $MODEL_NAME ?>::findByID(uint64_t fid) -> bool {
     }
 
     id = res->getUInt64("id");
-<?php
-    foreach ($FIELDS as $k => $v)
-    {
-        echo '    ', $v->name, ' = ', nullablefieldtype_get($v), ';', "\n";
-    }
-    ?>
+    get_this_model_data(*this, res);
 
     return true;
 }
 
+<?php
+if (isset($FINDABLES) && is_array($FINDABLES) && count($FINDABLES) > 0)
+{
+    foreach ($FINDABLES as $k => $v)
+    {
+        $fielddata = find_field($FIELDS, $v);
+        $queryt = field_type_cpp_query($fielddata[1]->type);
+?>
+auto <?= $MODEL_NAME ?>::findBy<?= ucfirst($v) ?>(<?= $queryt ?> value) -> bool {
+    auto sqlconn = std::reinterpret_pointer_cast<sql::Connection>(usingconn);
+
+    auto select_statement = unique_prepstatement_t(sqlconn->prepareStatement(
+        "SELECT * FROM <?= $TABLE_NAME ?> WHERE <?= $v ?> = ?;"));
+
+    select_statement<?= field_type_gen_set($fielddata[1]->type, $v, 'value', 1, '') ?>;
+
+    auto res = unique_resultset_t(select_statement->executeQuery());
+
+    if (!res->next()) {
+        return false;
+    }
+
+    id = res->getUInt64("id");
+    get_this_model_data(*this, res);
+
+    return true;
+}
+<?php
+    }
+}
+?>
+
 static void
 fill_prepared_statement_base_data(const <?= $MODEL_NAME ?> &val,
                                   unique_prepstatement_t &prepstmt) {
-    prepstmt->setUInt64(1, val.tokenable_id);
 <?php
     foreach ($FIELDS as $k => $v)
     {

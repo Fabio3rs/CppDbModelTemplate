@@ -12,6 +12,7 @@ if (!isset($jsondata))
 $TABLE_NAME = $jsondata->table;
 $MODEL_NAME = $jsondata->model;
 $FIELDS = $jsondata->fields;
+$FINDABLES = $jsondata->find_by;
 
 function field_type_cpp($type)
 {
@@ -19,8 +20,29 @@ function field_type_cpp($type)
         case 'UInt64':
             return 'uint64_t';
 
+        case 'Int':
+            return 'int';
+
         case 'String':
             return 'std::string';
+
+        case 'timestamp':
+            return 'std::chrono::system_clock::time_point';
+    }
+    return $type;
+}
+
+function field_type_cpp_query($type)
+{
+    switch ($type) {
+        case 'UInt64':
+            return 'uint64_t';
+
+        case 'Int':
+            return 'int';
+
+        case 'String':
+            return 'const std::string &';
 
         case 'timestamp':
             return 'std::chrono::system_clock::time_point';
@@ -33,6 +55,9 @@ function field_type_get($type, $name)
     switch ($type) {
         case 'UInt64':
             return 'res->getUInt64("' . $name . '")';
+
+        case 'Int':
+            return 'res->getInt("' . $name . '")';
 
         case 'String':
             return
@@ -51,6 +76,9 @@ function field_type_set($type, $name, $sname, $pos, $extra)
         case 'UInt64':
             return 'prepstmt->setUInt64(' . $pos . ', ' . $sname . $extra . ')';
 
+        case 'Int':
+            return 'prepstmt->setInt(' . $pos . ', ' . $sname . $extra . ')';
+
         case 'String':
             return 'prepstmt->setString(' . $pos . ', ' . $sname . $extra . ')';
 
@@ -61,10 +89,32 @@ function field_type_set($type, $name, $sname, $pos, $extra)
     throw new Exception('type error ' . $type);
 }
 
+function field_type_gen_set($type, $name, $sname, $pos, $extra)
+{
+    switch ($type) {
+        case 'UInt64':
+            return '->setUInt64(' . $pos . ', ' . $sname . $extra . ')';
+
+        case 'Int':
+            return '->setInt(' . $pos . ', ' . $sname . $extra . ')';
+
+        case 'String':
+            return '->setString(' . $pos . ', ' . $sname . $extra . ')';
+
+        case 'timestamp':
+            return '->setString(' . $pos . ', CSql::system_time_to_str(' . $sname . '))';
+    }
+
+    throw new Exception('type error ' . $type);
+}
+
 function extra_attribute_field($type)
 {
     switch ($type) {
         case 'UInt64':
+            return '{0}';
+
+        case 'Int':
             return '{0}';
     }
     return '';
@@ -160,6 +210,32 @@ function nullablefieldtype_get($field)
     return field_type_get($field->type, $field->name);
 }
 
+function find_field($fields, $name)
+{
+    foreach ($fields as $k => $v) {
+        if ($v->name == $name) {
+            return [ $k, $v ];
+        }
+    }
+
+    return null;
+}
+
+function declare_findable($fields, $findable)
+{
+    $findabledeclarations = '';
+    foreach ($findable as $k => $v)
+    {
+        $fielddata = find_field($fields, $v);
+
+        $queryt = field_type_cpp_query($fielddata[1]->type);
+
+        $findabledeclarations .= '    auto findBy'
+        . ucfirst($v) . '(' . $queryt . ' value) -> bool;' . "\n";
+    }
+
+    return $findabledeclarations;
+}
 
 function nullablefieldtype($field)
 {
