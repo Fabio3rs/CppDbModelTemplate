@@ -28,6 +28,9 @@ function field_type_cpp($type)
 
         case 'timestamp':
             return 'std::chrono::system_clock::time_point';
+
+        case 'Decimal':
+            return 'double';
     }
     return $type;
 }
@@ -46,6 +49,9 @@ function field_type_cpp_query($type)
 
         case 'timestamp':
             return 'std::chrono::system_clock::time_point';
+
+        case 'Decimal':
+            return 'double';
     }
     return $type;
 }
@@ -65,9 +71,13 @@ function field_type_get($type, $name)
 
         case 'timestamp':
             return 'CSql::string_to_system_clock(res->getString("' . $name . '"))';
+
+        case 'Decimal':
+            return 'res->getDouble("' . $name . '")';
     }
 
-    throw new Exception('type error ' . $type);
+    var_dump($type, $name);
+    throw new Exception('type error ' . $type . '  ' .  $name);
 }
 
 function field_type_set($type, $name, $sname, $pos, $extra)
@@ -84,6 +94,9 @@ function field_type_set($type, $name, $sname, $pos, $extra)
 
         case 'timestamp':
             return 'prepstmt->setString(' . $pos . ', CSql::system_time_to_str(' . $sname . '))';
+
+        case 'Decimal':
+            return 'prepstmt->setDouble(' . $pos . ', ' . $sname . $extra . ')';
     }
 
     throw new Exception('type error ' . $type);
@@ -103,6 +116,9 @@ function field_type_gen_set($type, $name, $sname, $pos, $extra)
 
         case 'timestamp':
             return '->setString(' . $pos . ', CSql::system_time_to_str(' . $sname . '))';
+
+        case 'Decimal':
+            return '->setDouble(' . $pos . ', ' . $sname . $extra . ')';
     }
 
     throw new Exception('type error ' . $type);
@@ -121,6 +137,9 @@ function extra_attribute_field($field)
 
         case 'Int':
             return '{0}';
+
+        case 'Decimal':
+            return '{0.0}';
     }
     return '';
 }
