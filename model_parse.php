@@ -80,6 +80,17 @@ function field_type_get($type, $name)
     throw new Exception('type error ' . $type . '  ' .  $name);
 }
 
+function poco_json_field_type_convert($fieldstruct, $sname)
+{
+    switch ($fieldstruct->type)
+    {
+        case 'timestamp':
+            return 'CSql::system_time_to_str(' . $sname . ')';
+        default:
+            return $sname;
+    }
+}
+
 function field_type_set($type, $name, $sname, $pos, $extra)
 {
     switch ($type) {

@@ -115,6 +115,32 @@ auto <?= $MODEL_NAME ?>::update() -> int {
     return update_statement->executeUpdate();
 }
 
+auto <?= $MODEL_NAME ?>::dump_json() -> Poco::JSON::Object::Ptr
+{
+    Poco::JSON::Object::Ptr result(new Poco::JSON::Object);
+
+    result->set("id", empty()? Poco::Dynamic::Var() :  Poco::Dynamic::Var(id));
+        
+    <?php
+    foreach ($FIELDS as $k => $v)
+    {
+        if ($v->nullable)
+        {
+            ?>
+            result->set("<?= $v->name ?>", <?= $v->name ?>? Poco::Dynamic::Var(<?= poco_json_field_type_convert($v, $v->name) ?>) :  Poco::Dynamic::Var());
+            <?php
+        }else
+        {
+            ?>
+            result->set("<?= $v->name ?>", <?= poco_json_field_type_convert($v, $v->name) ?>);
+            <?php
+        }
+    }
+    ?>
+
+    return result;
+}
+
 void <?= $MODEL_NAME ?>::save() {
     if (id == 0) {
         create();

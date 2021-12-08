@@ -2,6 +2,7 @@
 
 #include <Poco/JSON/JSON.h>
 #include <Poco/Dynamic/Var.h>
+#include <Poco/JSON/Object.h>
 
 #include "../Database/GenericDBConnection.hpp"
 #include <chrono>
@@ -33,31 +34,7 @@ public:
     auto findByID(uint64_t fid) -> bool;
     void save();
 
-    auto dump_json() -> Poco::JSON::Object::Ptr
-    {
-        Poco::JSON::Object::Ptr result(new Poco::JSON::Object);
-
-        result->set("id", empty()? Poco::Dynamic::Var() :  Poco::Dynamic::Var(id));
-        
-        <?php
-        foreach ($FIELDS as $k => $v)
-        {
-            if ($v->nullable)
-            {
-                ?>
-                result->set("<?= $v->name ?>", <?= $v->name ?>? Poco::Dynamic::Var(<?= $v->name ?>.value()) :  Poco::Dynamic::Var());
-                <?php
-            }else
-            {
-                ?>
-                result->set("<?= $v->name ?>", <?= $v->name ?>);
-                <?php
-            }
-        }
-        ?>
-
-        return result;
-    }
+    auto dump_json() -> Poco::JSON::Object::Ptr;
 
     <?= $MODEL_NAME ?>(std::shared_ptr<GenericDBConnection> conn)
         : usingconn(conn) {}
