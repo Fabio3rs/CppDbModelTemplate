@@ -87,7 +87,7 @@ function poco_json_field_type_convert($fieldstruct, $sname)
         case 'timestamp':
             return 'CSql::system_time_to_str(' . $sname . ')';
         default:
-            return $sname . '.value()';
+            return $sname . ($fieldstruct->nullable?  '.value()' : '');
     }
 }
 
