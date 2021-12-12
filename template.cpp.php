@@ -115,7 +115,7 @@ auto <?= $MODEL_NAME ?>::update() -> int {
     return update_statement->executeUpdate();
 }
 
-auto <?= $MODEL_NAME ?>::dump_json() -> Poco::JSON::Object::Ptr
+auto <?= $MODEL_NAME ?>::dump_json() const -> Poco::JSON::Object::Ptr
 {
     Poco::JSON::Object::Ptr result(new Poco::JSON::Object);
 
@@ -139,6 +139,38 @@ auto <?= $MODEL_NAME ?>::dump_json() -> Poco::JSON::Object::Ptr
     ?>
 
     return result;
+}
+
+void <?= $MODEL_NAME ?>::from_json(const Poco::JSON::Object::Ptr &json)
+{
+    if (json.isNull())
+    {
+        return;
+    }
+
+    <?php
+        echo 'if (json->has("id")) {', "\n";
+            echo 'id = json->getValue<uint64_t>("id");', "\n";
+        echo "}\n";
+    foreach ($FIELDS as $k => $v)
+    {
+        echo 'if (json->has("', $v->name,'") && !json->isNull("', $v->name,'")) {', "\n";
+        switch ($v->type)
+        {
+            case 'timestamp':
+                //echo 'CSql::system_time_to_str(' . $sname . ')';
+                echo $v->name, ' = CSql::string_to_system_clock(json->getValue<std::string>("', $v->name, '"));', "\n";
+                break;
+            default:
+                //return $sname . ($fieldstruct->nullable?  '.value()' : '');
+                echo $v->name, ' = json->getValue<', field_type_cpp($v->type) ,'>("', $v->name, '");', "\n";
+
+                break;
+        }
+
+        echo "}\n";
+    }
+    ?>
 }
 
 void <?= $MODEL_NAME ?>::save() {

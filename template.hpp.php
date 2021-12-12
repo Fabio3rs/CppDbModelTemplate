@@ -34,7 +34,8 @@ public:
     auto findByID(uint64_t fid) -> bool;
     void save();
 
-    auto dump_json() -> Poco::JSON::Object::Ptr;
+    auto dump_json() const -> Poco::JSON::Object::Ptr;
+    void from_json(const Poco::JSON::Object::Ptr &json);
 
     <?= $MODEL_NAME ?>(std::shared_ptr<GenericDBConnection> conn)
         : usingconn(conn) {}
