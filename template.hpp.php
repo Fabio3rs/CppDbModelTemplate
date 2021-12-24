@@ -40,9 +40,21 @@ public:
 
     explicit <?= $MODEL_NAME ?>() = default;
     explicit <?= $MODEL_NAME ?>(const Poco::Dynamic::Var &var) {
-        Poco::JSON::Object::Ptr optr(
-                new Poco::JSON::Object(var.extract<Poco::JSON::Object>()));
-            from_json(optr);
+        if (var.type() == typeid(Poco::JSON::Object))
+        {
+        from_json(var.extract<Poco::JSON::Object>());
+        }else if (var.type() == typeid(Poco::JSON::Object::Ptr))
+        {
+        from_json(var.extract<Poco::JSON::Object::Ptr>());
+        }else
+        {
+            std::string exceptiontext;
+            exceptiontext.reserve(80);
+            exceptiontext += "Type (";
+            exceptiontext += var.type().name();
+            exceptiontext += ") not compatible with <?= $MODEL_NAME ?>";
+          throw Poco::BadCastException(exceptiontext);
+        }
     }
     explicit <?= $MODEL_NAME ?>(std::shared_ptr<GenericDBConnection> conn)
         : usingconn(conn) {}
