@@ -38,6 +38,8 @@ public:
     void from_json(const Poco::JSON::Object::Ptr &json);
     void from_json(const Poco::JSON::Object &json);
 
+    void set_connection(std::shared_ptr<GenericDBConnection> conn) { usingconn = conn; }
+
     explicit <?= $MODEL_NAME ?>() = default;
     explicit <?= $MODEL_NAME ?>(const Poco::Dynamic::Var &var) {
         if (var.type() == typeid(Poco::JSON::Object))
