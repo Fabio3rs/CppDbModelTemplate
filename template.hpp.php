@@ -36,7 +36,33 @@ public:
 
     auto dump_json() const -> Poco::JSON::Object::Ptr;
     void from_json(const Poco::JSON::Object::Ptr &json);
+    void from_json(const Poco::JSON::Object &json);
 
-    <?= $MODEL_NAME ?>(std::shared_ptr<GenericDBConnection> conn)
+    explicit <?= $MODEL_NAME ?>() = default;
+    explicit <?= $MODEL_NAME ?>(const Poco::Dynamic::Var &var) {
+        Poco::JSON::Object::Ptr optr(
+                new Poco::JSON::Object(var.extract<Poco::JSON::Object>()));
+            from_json(optr);
+    }
+    explicit <?= $MODEL_NAME ?>(std::shared_ptr<GenericDBConnection> conn)
         : usingconn(conn) {}
 };
+
+
+template <>
+inline <?= $MODEL_NAME ?> 
+Poco::JSON::Object::getValue<<?= $MODEL_NAME ?>>(const std::string &key) const {
+    Dynamic::Var value = get(key);
+    return <?= $MODEL_NAME ?>(value);
+}
+
+template <>
+class Poco::Dynamic::VarHolderImpl<<?= $MODEL_NAME ?>>
+    : public VarHolderImpl<JSON::Object> {
+  public:
+    VarHolderImpl(const <?= $MODEL_NAME ?> &val);
+    ~VarHolderImpl();
+};
+
+
+

@@ -1,6 +1,12 @@
 #include "../Database/CSql.hpp"
 #include "<?= $MODEL_NAME ?>.hpp"
 
+Poco::Dynamic::VarHolderImpl<<?= $MODEL_NAME ?>>::VarHolderImpl(
+    const <?= $MODEL_NAME ?> &val)
+    : Poco::Dynamic::VarHolderImpl<JSON::Object>(*val.dump_json()) {}
+
+Poco::Dynamic::VarHolderImpl<<?= $MODEL_NAME ?>>::~VarHolderImpl() {}
+
 static void get_this_model_data(<?= $MODEL_NAME ?> &val,
                                   unique_resultset_t &res)
 {
@@ -148,22 +154,27 @@ void <?= $MODEL_NAME ?>::from_json(const Poco::JSON::Object::Ptr &json)
         return;
     }
 
+    from_json(*json);
+}
+
+void <?= $MODEL_NAME ?>::from_json(const Poco::JSON::Object &json)
+{
     <?php
-        echo 'if (json->has("id")) {', "\n";
-            echo 'id = json->getValue<uint64_t>("id");', "\n";
-        echo "}\n";
+        echo 'if (json.has("id") && !json.isNull("id")) {', "\n";
+            echo 'id = json.getValue<uint64_t>("id");', "\n";
+        echo "}else {id = 0;}\n";
     foreach ($FIELDS as $k => $v)
     {
-        echo 'if (json->has("', $v->name,'") && !json->isNull("', $v->name,'")) {', "\n";
+        echo 'if (json.has("', $v->name,'") && !json.isNull("', $v->name,'")) {', "\n";
         switch ($v->type)
         {
             case 'timestamp':
                 //echo 'CSql::system_time_to_str(' . $sname . ')';
-                echo $v->name, ' = CSql::string_to_system_clock(json->getValue<std::string>("', $v->name, '"));', "\n";
+                echo $v->name, ' = CSql::string_to_system_clock(json.getValue<std::string>("', $v->name, '"));', "\n";
                 break;
             default:
                 //return $sname . ($fieldstruct->nullable?  '.value()' : '');
-                echo $v->name, ' = json->getValue<', field_type_cpp($v->type) ,'>("', $v->name, '");', "\n";
+                echo $v->name, ' = json.getValue<', field_type_cpp($v->type) ,'>("', $v->name, '");', "\n";
 
                 break;
         }
