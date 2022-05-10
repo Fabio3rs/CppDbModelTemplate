@@ -27,18 +27,18 @@ public:
     ?>
 
     /* Functions */
-    auto empty() const -> bool { return id == 0; }
+    [[nodiscard]] auto empty() const -> bool { return id == 0; }
 
 <?= declare_findable($FIELDS, $FINDABLES) ?>
 
     auto findByID(uint64_t fid) -> bool;
     void save();
 
-    auto dump_json() const -> Poco::JSON::Object::Ptr;
+    [[nodiscard]] auto dump_json() const -> Poco::JSON::Object::Ptr;
     void from_json(const Poco::JSON::Object::Ptr &json);
     void from_json(const Poco::JSON::Object &json);
 
-    void set_connection(std::shared_ptr<GenericDBConnection> conn) { usingconn = conn; }
+    void set_connection(std::shared_ptr<GenericDBConnection> conn) { usingconn = std::move(conn); }
 
     explicit <?= $MODEL_NAME ?>() = default;
     explicit <?= $MODEL_NAME ?>(const Poco::Dynamic::Var &var) {
@@ -51,6 +51,7 @@ public:
         }else
         {
             std::string exceptiontext;
+            // NOLINTNEXTLINE(readability-magic-numbers)
             exceptiontext.reserve(80);
             exceptiontext += "Type (";
             exceptiontext += var.type().name();
@@ -59,13 +60,13 @@ public:
         }
     }
     explicit <?= $MODEL_NAME ?>(std::shared_ptr<GenericDBConnection> conn)
-        : usingconn(conn) {}
+        : usingconn(std::move(conn)) {}
 };
 
 
 template <>
-inline <?= $MODEL_NAME ?> 
-Poco::JSON::Object::getValue<<?= $MODEL_NAME ?>>(const std::string &key) const {
+inline auto
+Poco::JSON::Object::getValue<<?= $MODEL_NAME ?>>(const std::string &key) -> <?= $MODEL_NAME ?> {
     Dynamic::Var value = get(key);
     return <?= $MODEL_NAME ?>(value);
 }
@@ -74,8 +75,14 @@ template <>
 class Poco::Dynamic::VarHolderImpl<<?= $MODEL_NAME ?>>
     : public VarHolderImpl<JSON::Object> {
   public:
-    VarHolderImpl(const <?= $MODEL_NAME ?> &val);
-    ~VarHolderImpl();
+    explicit VarHolderImpl(const <?= $MODEL_NAME ?> &val);
+    VarHolderImpl(const VarHolderImpl &) = default;
+
+    VarHolderImpl(VarHolderImpl &&) = default;
+
+    auto operator=(const VarHolderImpl &) -> VarHolderImpl & = default;            // copy assignment operator
+    auto operator=(VarHolderImpl &&) -> VarHolderImpl & = default;                 // move assignment operator
+    ~VarHolderImpl() override;
 };
 
 
