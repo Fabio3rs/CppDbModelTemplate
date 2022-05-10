@@ -1,11 +1,11 @@
 #include "../Database/CSql.hpp"
 #include "<?= $MODEL_NAME ?>.hpp"
 
-Poco::Dynamic::VarHolderImpl<<?= $MODEL_NAME ?>>::VarHolderImpl(
+Poco::Dynamic::VarHolderImpl<<?= $MODEL_NAME ?>>::VarHolderImpl::VarHolderImpl(
     const <?= $MODEL_NAME ?> &val)
     : Poco::Dynamic::VarHolderImpl<JSON::Object>(*val.dump_json()) {}
 
-Poco::Dynamic::VarHolderImpl<<?= $MODEL_NAME ?>>::~VarHolderImpl() {}
+Poco::Dynamic::VarHolderImpl<<?= $MODEL_NAME ?>>::~VarHolderImpl() = default;
 
 static void get_this_model_data(<?= $MODEL_NAME ?> &val,
                                   unique_resultset_t &res)
@@ -73,12 +73,14 @@ auto <?= $MODEL_NAME ?>::findBy<?= ucfirst($v) ?>(<?= $queryt ?> value) -> bool 
 static void
 fill_prepared_statement_base_data(const <?= $MODEL_NAME ?> &val,
                                   unique_prepstatement_t &prepstmt) {
+    // NOLINTBEGIN(readability-magic-numbers)
 <?php
     foreach ($FIELDS as $k => $v)
     {
         echo '    ', nullablefieldtype_set($v, 'val.' . $v->name, $k + 1), ';', "\n";
     }
     ?>
+    // NOLINTEND(readability-magic-numbers)
 }
 
 void <?= $MODEL_NAME ?>::create() {
